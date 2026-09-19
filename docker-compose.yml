@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bandhan
+      POSTGRES_PASSWORD: bandhan_dev_password
+      POSTGRES_DB: bandhan_hall
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./db/seed_notification_templates.sql:/docker-entrypoint-initdb.d/2-seed.sql
+      - ./db/seed_demo_data.sql:/docker-entrypoint-initdb.d/3-seed.sql
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://bandhan:bandhan_dev_password@db:5432/bandhan_hall
+      JWT_ACCESS_SECRET: dev_access_secret_change_me
+      JWT_REFRESH_SECRET: dev_refresh_secret_change_me
+      RAZORPAY_KEY_ID: rzp_test_placeholder
+      RAZORPAY_KEY_SECRET: placeholder
+      RAZORPAY_WEBHOOK_SECRET: placeholder
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+volumes:
+  db_data:
